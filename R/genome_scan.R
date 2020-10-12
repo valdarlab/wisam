@@ -40,6 +40,9 @@ wisam <- function(G, y, noise = NULL, counts = NULL, X, K, weights = "none"){
   if (missing(X)) { X <- matrix(data = 1, nrow = n) }
   # initialize K using the G matrix and emma package if missing
   if (missing(K)) { K <- emma.kinship(t(G), "additive", "all") }
+  # intialize noise and counts if missing
+  if (missing(noise)) { noise <- matrix(data = 1, nrow = n)}
+  if (missing(counts)) { counts <- matrix(data = 1, nrow = n)}
 
   #### CONDITIONS THAT CAUSE AN ERROR ####
   if (!all(c(nrow(X), nrow(G), nrow(K)))) {

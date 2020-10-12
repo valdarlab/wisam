@@ -28,7 +28,7 @@ likeli.brent.het.estimates <- function(h2, X, y, K, Dhalf, p, laml, Ul, I){
   Mhet = diag(1/sqrt(h2*laml + (1-h2)*diag(I))) %*% t(Ul) %*% Dhalf
   Mx = Mhet %*% X
   My = Mhet %*% y
-  fit = lm.fit::lm.fit(Mx, c(My))
+  fit = stats::lm.fit(Mx, c(My))
   B = fit$coefficients
   s2 = sum(fit$residuals^2)/p
 
