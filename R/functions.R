@@ -123,6 +123,7 @@ scan.strain.means <- function(G, y, X, K, weights){
       optMLE = optimize(likeli.brent.het, c(0,1), X0, y0, K0, Dhalf0, p0, laml0, Ul0, I0,
                         maximum = TRUE)
       thetaMLE = optMLE$objective
+      h2 = optMLE$maximum
 
       #### Extract the parameters
       paramsMLE = likeli.brent.het.estimates(h2, X0, y0, K0, Dhalf0, p0, laml0, Ul0, I0)
