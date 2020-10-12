@@ -5,7 +5,7 @@
 #' @param G A n by p matrix of genotypes, where n is the number of strains and p is the number of snps to be tested (can have missing values)
 #' @param y A n length vector of mean phenotype for each strain
 #' @param noise A n length vector of sample variances for each strain
-#' @param counts A n length vector of number of replicates for each strain
+#' @param counts A n length vector of number of replicates for each strain. Will default to a n-length vector of ones.
 #' @param X A n by q matrix of covariates (optional)
 #' @param K A n by n genomic relationship matrix. Will be calculated if unspecified.
 #' @param weights A string specifying the weights to be used. The following are permitted: "none", "samplevars", "limma", and "counts"
@@ -34,6 +34,10 @@ wisam <- function(G, y, noise = NULL, counts = NULL, X, K, weights = "none"){
   #### UNACCEPTABLE MISSINGNESS ####
   if (missing(y)) { stop('Must provide y (n-vector of phenotypes) to run a genome Scan.') }
   if (missing(G)) { stop('Must provide at least one snp to run a genome scan.')}
+  if (weights == "limma" & missing(noise)) {stop('Must provide noise (n-vector of sample variances) to run a genome Scan using limma-based weights.')}
+  if (weights == "limma" & missing(counts)) {stop('Must provide counts (n-vector of replicates) to run a genome Scan using limma-based weights.')}
+  if (weights == "samplevars" & missing(noise)) {stop('Must provide noise (n-vector of sample variances) to run a genome Scan using sample variance-based weights.')}
+
 
   #### ACCEPTABLE MISSINGNESS ####
   # initialize X to an intercept if missing
