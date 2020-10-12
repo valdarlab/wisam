@@ -103,7 +103,7 @@ wisam <- function(G, y, noise = NULL, counts = NULL, X, K, weights = "none"){
                     ML0 = rep(p_value_het$theta0, unique_counts),
                     beta = rep(p_value_het$beta, unique_counts),
                     h2 = rep(p_value_het$h20, unique_counts),
-                    s2 = rep(p_value_het$s20, unique_counts)) %>% arrange(indices) %>%
-      select(-indices) #%>% unlist() %>% unname()
+                    s2 = rep(p_value_het$s20, unique_counts)) %>% dplyr::arrange(indices) %>%
+      dplyr::select(-indices) #%>% unlist() %>% unname()
   ps %>% as.list()
 }

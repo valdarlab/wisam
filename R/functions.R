@@ -49,12 +49,12 @@ scan.strain.means <- function(G, y, X, K, weights){
 
   Dhalf = diag(sqrt(weights))
 
-  p_value_het = vector("numeric", p) # p values
-  thetaMLEs = vector("numeric", p) # likelihood under alt
-  theta0s = vector("numeric", p) # likelihood under null
-  s20s = vector("numeric", p) # s2 estimate under null
-  h20s = vector("numeric", p) # h2 estimate under null
-  betas = vector("numeric", p) # beta estimate under null
+  p_value_het = vector("numeric", length(G)) # p values
+  thetaMLEs = vector("numeric", length(G)) # likelihood under alt
+  theta0s = vector("numeric", length(G)) # likelihood under null
+  s20s = vector("numeric", length(G)) # s2 estimate under null
+  h20s = vector("numeric", length(G)) # h2 estimate under null
+  betas = vector("numeric", length(G)) # beta estimate under null
 
   # intercept covariate
   Xint = X
@@ -142,6 +142,7 @@ scan.strain.means <- function(G, y, X, K, weights){
       optMLE = optimize(likeli.brent.het, c(0,1), X, y, K, Dhalf, p, laml, Ul, I,
                         maximum = TRUE)
       thetaMLE = optMLE$objective
+      h2 = optMLE$maximum
 
       #### Extract the parameters
       paramsMLE = likeli.brent.het.estimates(h2, X, y, K, Dhalf, p, laml, Ul, I)
