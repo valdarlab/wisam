@@ -127,8 +127,8 @@ scan.strain.means <- function(G, y, X, K, weights){
 
       #### Extract the parameters
       paramsMLE = likeli.brent.het.estimates(h2, X0, y0, K0, Dhalf0, p0, laml0, Ul0, I0)
-      betas = paramsMLE$B %>% unname() %>% as.numeric()
-      beta10 = betas[2]
+      beta = paramsMLE$B %>% unname() %>% as.numeric()
+      beta10 = beta[2]
 
       tLR = 2*(thetaMLE - theta00)
       thetaMLEs[i] = thetaMLE
@@ -146,8 +146,8 @@ scan.strain.means <- function(G, y, X, K, weights){
 
       #### Extract the parameters
       paramsMLE = likeli.brent.het.estimates(h2, X, y, K, Dhalf, p, laml, Ul, I)
-      betas = paramsMLE$B %>% unname() %>% as.numeric()
-      beta1 = betas[2]
+      beta = paramsMLE$B %>% unname() %>% as.numeric()
+      beta1 = beta[2]
 
       tLR = 2*(thetaMLE - theta0)
       thetaMLEs[i] = thetaMLE

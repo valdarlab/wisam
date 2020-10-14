@@ -3,9 +3,8 @@
 #' Performs a genome scan on heteroscedastic data.
 #'
 #' @param G A n by p matrix of genotypes, where n is the number of strains and p is the number of snps to be tested (can have missing values)
-#' @param y A n length vector of mean phenotype for each strain
-#' @param noise A n length vector of sample variances for each strain
-#' @param counts A n length vector of number of replicates for each strain. Will default to a n-length vector of ones.
+#' @param y A vector of phenotypes for each individual organism
+#' @param strains A vector of strain names corresponding with the phenotypes in y. Should contain n unique strain names.
 #' @param X A n by q matrix of covariates (optional)
 #' @param K A n by n genomic relationship matrix. Will be calculated if unspecified.
 #' @param weights A string specifying the weights to be used. The following are permitted: "none", "samplevars", "limma", and "counts"
@@ -26,37 +25,38 @@
 #' @importFrom emma emma.kinship
 #'
 #' @export
-wisam <- function(G, y, noise = NULL, counts = NULL, X, K, weights = "none"){
+wisam <- function(G, y, strains, X, K, weights = "none"){
 
   # number of strains
-  n <- length(y)
+  n <- length(unique(strains))
 
   #### UNACCEPTABLE MISSINGNESS ####
-  if (missing(y)) { stop('Must provide y (n-vector of phenotypes) to run a genome Scan.') }
+  if (missing(y)) { stop('Must provide y (vector of phenotypes) to run a genome Scan.') }
   if (missing(G)) { stop('Must provide at least one snp to run a genome scan.')}
-  if (weights == "limma" & missing(noise)) {stop('Must provide noise (n-vector of sample variances) to run a genome Scan using limma-based weights.')}
-  if (weights == "limma" & missing(counts)) {stop('Must provide counts (n-vector of replicates) to run a genome Scan using limma-based weights.')}
-  if (weights == "samplevars" & missing(noise)) {stop('Must provide noise (n-vector of sample variances) to run a genome Scan using sample variance-based weights.')}
-
 
   #### ACCEPTABLE MISSINGNESS ####
   # initialize X to an intercept if missing
   if (missing(X)) { X <- matrix(data = 1, nrow = n) }
   # initialize K using the G matrix and emma package if missing
   if (missing(K)) { K <- emma.kinship(t(G), "additive", "all") }
-  # intialize noise and counts if missing
-  if (missing(noise)) { noise <- matrix(data = 1, nrow = n)}
-  if (missing(counts)) { counts <- matrix(data = 1, nrow = n)}
 
   #### CONDITIONS THAT CAUSE AN ERROR ####
-  if (!all(c(nrow(X), nrow(G), nrow(K)))) {
+  if (!all(sapply(list(nrow(X), nrow(G), nrow(K)),
+                  FUN = identical, length(unique(strains))))){
     stop("Input dimensions don't match.")
   }
-  # checks length of phenotypes, sample variances, and counts, need one for each strain
-  # if noise, counts left NULL, will stop
-  if(!all(c(length(y), length(noise), length(counts)))){
+  # checks length of phenotypes and strains
+  if(length(y) != length(strains)){
     stop("Input dimensions don't match.")
   }
+
+  pheno_long = data.frame(y = y, strains = strains)
+  pheno_means = pheno_long %>% dplyr::group_by(strains) %>% dplyr::summarise(mean = mean(y),
+                                                               noise = var(y),
+                                                               counts = dplyr::n())
+  y = pheno_means$mean
+  noise = pheno_means$noise
+  counts = pheno_means$counts
 
   ## check for strains with 0 variance and take them out
   if(weights %in% c("samplevars")){
