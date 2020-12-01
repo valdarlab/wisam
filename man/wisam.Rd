@@ -4,16 +4,14 @@
 \alias{wisam}
 \title{Weighted Genome Scan}
 \usage{
-wisam(G, y, noise = NULL, counts = NULL, X, K, weights = "none")
+wisam(G, y, strains, X, K, weights = "none")
 }
 \arguments{
 \item{G}{A n by p matrix of genotypes, where n is the number of strains and p is the number of snps to be tested (can have missing values)}
 
-\item{y}{A n length vector of mean phenotype for each strain}
+\item{y}{A vector of phenotypes for each individual organism}
 
-\item{noise}{A n length vector of sample variances for each strain}
-
-\item{counts}{A n length vector of number of replicates for each strain}
+\item{strains}{A vector of strain names corresponding with the phenotypes in y. Should contain n unique strain names.}
 
 \item{X}{A n by q matrix of covariates (optional)}
 
