@@ -29,7 +29,7 @@
 wisam <- function(G, y, strains, X, K, weights = "none", user_weights = NULL){
 
   # number of strains
-  n <- length(unique(strains))
+  n <- nrow(strains)
 
   #### UNACCEPTABLE MISSINGNESS ####
   if (missing(y)) { stop('Must provide y (vector of phenotypes) to run a genome Scan.') }
