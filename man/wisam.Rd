@@ -4,7 +4,7 @@
 \alias{wisam}
 \title{Weighted Genome Scan}
 \usage{
-wisam(G, y, strains, X, K, weights = "none")
+wisam(G, y, strains, X, K, weights = "none", user_weights = NULL)
 }
 \arguments{
 \item{G}{A n by p matrix of genotypes, where n is the number of strains and p is the number of snps to be tested (can have missing values)}
@@ -17,7 +17,9 @@ wisam(G, y, strains, X, K, weights = "none")
 
 \item{K}{A n by n genomic relationship matrix. Will be calculated if unspecified.}
 
-\item{weights}{A string specifying the weights to be used. The following are permitted: "none", "samplevars", "limma", and "counts"}
+\item{weights}{A string specifying the weights to be used. The following are permitted: "none", "samplevars", "limma", "counts", and "user"}
+
+\item{user_weights}{A n length vector of weights for each strain, used if weights = "user"}
 }
 \value{
 A list containing:

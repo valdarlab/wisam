@@ -7,7 +7,8 @@
 #' @param strains A vector of strain names corresponding with the phenotypes in y. Should contain n unique strain names.
 #' @param X A n by q matrix of covariates (optional)
 #' @param K A n by n genomic relationship matrix. Will be calculated if unspecified.
-#' @param weights A string specifying the weights to be used. The following are permitted: "none", "samplevars", "limma", and "counts"
+#' @param weights A string specifying the weights to be used. The following are permitted: "none", "samplevars", "limma", "counts", and "user"
+#' @param user_weights A n length vector of weights for each strain, used if weights = "user"
 #'
 #' @return A list containing:
 #' \itemize{
@@ -25,7 +26,7 @@
 #' @importFrom emma emma.kinship
 #'
 #' @export
-wisam <- function(G, y, strains, X, K, weights = "none"){
+wisam <- function(G, y, strains, X, K, weights = "none", user_weights = NULL){
 
   # number of strains
   n <- length(unique(strains))
@@ -33,6 +34,8 @@ wisam <- function(G, y, strains, X, K, weights = "none"){
   #### UNACCEPTABLE MISSINGNESS ####
   if (missing(y)) { stop('Must provide y (vector of phenotypes) to run a genome Scan.') }
   if (missing(G)) { stop('Must provide at least one snp to run a genome scan.')}
+  if (is.null(user_weights) & weights == "user") { stop('Must provide user_weights (vector of weights) if weights = "user".')}
+  if(!(weights %in% c("none", "samplevars", "limma", "counts", "user"))){stop('Weights must be one of "none", "samplevars", "limma", "counts", and "user"')}
 
   #### ACCEPTABLE MISSINGNESS ####
   # initialize X to an intercept if missing
@@ -90,6 +93,8 @@ wisam <- function(G, y, strains, X, K, weights = "none"){
     print("counts")
     weights <- counts
     weights = weights/sum(weights)*sum(counts)
+  } else if(weights == "user"){
+    weights <- user_weights
   }
 
   ######## Find unique SNPs
