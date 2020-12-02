@@ -3,8 +3,8 @@
 #' Performs a genome scan on heteroscedastic data.
 #'
 #' @param G A n by p matrix of genotypes, where n is the number of strains and p is the number of snps to be tested (can have missing values)
-#' @param y A vector of phenotypes for each individual organism
-#' @param strains A vector of strain names corresponding with the phenotypes in y. Should contain n unique strain names.
+#' @param y A N length vector of phenotypes for each individual organism, where N is the total number of individuals
+#' @param strains A n by N incidence matrix that maps every individual to a strain
 #' @param X A n by q matrix of covariates (optional)
 #' @param K A n by n genomic relationship matrix. Will be calculated if unspecified.
 #' @param weights A string specifying the weights to be used. The following are permitted: "none", "samplevars", "limma", "counts", and "user"
@@ -49,10 +49,14 @@ wisam <- function(G, y, strains, X, K, weights = "none", user_weights = NULL){
     stop("Input dimensions don't match.")
   }
   # checks length of phenotypes and strains
-  if(length(y) != length(strains)){
+  if(length(y) != ncol(strains)){
+    stop("Input dimensions don't match.")
+  }
+  if(nrow(G) != nrow(strains)){
     stop("Input dimensions don't match.")
   }
 
+  strains = apply(strains, 2, function(x) x*c(1:nrow(strains))) %>% colSums() %>% unname()
   pheno_long = data.frame(y = y, strains = strains)
   pheno_means = pheno_long %>% dplyr::group_by(strains) %>% dplyr::summarise(mean = mean(y),
                                                                noise = var(y),

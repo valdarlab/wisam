@@ -9,9 +9,9 @@ wisam(G, y, strains, X, K, weights = "none", user_weights = NULL)
 \arguments{
 \item{G}{A n by p matrix of genotypes, where n is the number of strains and p is the number of snps to be tested (can have missing values)}
 
-\item{y}{A vector of phenotypes for each individual organism}
+\item{y}{A N length vector of phenotypes for each individual organism, where N is the total number of individuals}
 
-\item{strains}{A vector of strain names corresponding with the phenotypes in y. Should contain n unique strain names.}
+\item{strains}{A n by N incidence matrix that maps every individual to a strain}
 
 \item{X}{A n by q matrix of covariates (optional)}
 
