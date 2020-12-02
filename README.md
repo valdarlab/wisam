@@ -14,6 +14,9 @@ devtools::install_github('williamvaldar/wisam')
 ```
 y = rnorm(1000)
 G = matrix(rbinom(1000,1,0.5), nrow = 100)
-strains = rep(1:100, each = 10) 
-wisam::wisam(G, y, strains, weights = "limma")
+strains = rep(1:100, each = 10)
+tab <- table(cbind.data.frame(ID = 1:length(strains), 
+                              Strain = strains)) %>% as.data.frame()
+Z = tidyr::pivot_wider(tab, names_from = Strain, values_from = Freq)[-1] %>% t()
+wisam::wisam(G, y, Z, weights = "limma")
 ```
