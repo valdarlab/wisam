@@ -12,6 +12,8 @@ devtools::install_github('williamvaldar/wisam')
 
 ## Usage
 ```
+library(wisam)
+library(tidyverse)
 y = rnorm(1000)
 G = matrix(rbinom(1000,1,0.5), nrow = 100)
 strains = rep(1:100, each = 10)
