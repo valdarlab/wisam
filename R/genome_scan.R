@@ -41,11 +41,11 @@ wisam <- function(G, y, strains, X, K, weights = "none", user_weights = NULL){
   # initialize X to an intercept if missing
   if (missing(X)) { X <- matrix(data = 1, nrow = n) }
   # initialize K using the G matrix and emma package if missing
-  if (missing(K)) { K <- emma.kinship(t(G), "additive", "all") }
+  if (missing(K)) { K <- emma::emma.kinship(t(G), "additive", "all") }
 
   #### CONDITIONS THAT CAUSE AN ERROR ####
   if (!all(sapply(list(nrow(X), nrow(G), nrow(K)),
-                  FUN = identical, length(unique(strains))))){
+                  FUN = identical, nrow(strains)))){
     stop("Input dimensions don't match.")
   }
   # checks length of phenotypes and strains
