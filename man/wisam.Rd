@@ -7,19 +7,19 @@
 wisam(G, y, strains, X, K, weights = "none", user_weights = NULL)
 }
 \arguments{
-\item{G}{A n by p matrix of genotypes, where n is the number of strains and p is the number of snps to be tested (can have missing values)}
+\item{G}{A s by p matrix of genotypes, where s is the number of strains and p is the number of snps to be tested (can have missing values)}
 
 \item{y}{A N length vector of phenotypes for each individual organism, where N is the total number of individuals}
 
-\item{strains}{A n by N incidence matrix that maps every individual to a strain}
+\item{strains}{A s by N incidence matrix that maps every individual to a strain}
 
-\item{X}{A n by q matrix of covariates (optional)}
+\item{X}{A s by q matrix of covariates (optional)}
 
-\item{K}{A n by n genomic relationship matrix. Will be calculated if unspecified.}
+\item{K}{A s by s genomic relationship matrix. Will be calculated if unspecified.}
 
 \item{weights}{A string specifying the weights to be used. The following are permitted: "none", "samplevars", "limma", "counts", and "user"}
 
-\item{user_weights}{A n length vector of weights for each strain, used if weights = "user"}
+\item{user_weights}{A s length vector of weights for each strain, used if weights = "user"}
 }
 \value{
 A list containing:

@@ -2,13 +2,13 @@
 #'
 #' Performs a genome scan on heteroscedastic data.
 #'
-#' @param G A n by p matrix of genotypes, where n is the number of strains and p is the number of snps to be tested (can have missing values)
+#' @param G A s by p matrix of genotypes, where s is the number of strains and p is the number of snps to be tested (can have missing values)
 #' @param y A N length vector of phenotypes for each individual organism, where N is the total number of individuals
-#' @param strains A n by N incidence matrix that maps every individual to a strain
-#' @param X A n by q matrix of covariates (optional)
-#' @param K A n by n genomic relationship matrix. Will be calculated if unspecified.
+#' @param strains A s by N incidence matrix that maps every individual to a strain
+#' @param X A s by q matrix of covariates (optional)
+#' @param K A s by s genomic relationship matrix. Will be calculated if unspecified.
 #' @param weights A string specifying the weights to be used. The following are permitted: "none", "samplevars", "limma", "counts", and "user"
-#' @param user_weights A n length vector of weights for each strain, used if weights = "user"
+#' @param user_weights A s length vector of weights for each strain, used if weights = "user"
 #'
 #' @return A list containing:
 #' \itemize{
@@ -29,7 +29,7 @@
 wisam <- function(G, y, strains, X, K, weights = "none", user_weights = NULL){
 
   # number of strains
-  n <- nrow(strains)
+  s <- nrow(strains)
 
   #### UNACCEPTABLE MISSINGNESS ####
   if (missing(y)) { stop('Must provide y (vector of phenotypes) to run a genome Scan.') }
@@ -39,7 +39,7 @@ wisam <- function(G, y, strains, X, K, weights = "none", user_weights = NULL){
 
   #### ACCEPTABLE MISSINGNESS ####
   # initialize X to an intercept if missing
-  if (missing(X)) { X <- matrix(data = 1, nrow = n) }
+  if (missing(X)) { X <- matrix(data = 1, nrow = s) }
   # initialize K using the G matrix and emma package if missing
   if (missing(K)) { K <- emma::emma.kinship(t(G), "additive", "all") }
 
