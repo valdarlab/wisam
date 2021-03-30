@@ -2,7 +2,7 @@
 #'
 #' Performs a genome scan on heteroscedastic data.
 #'
-#' @param G A s by p matrix of genotypes, where s is the number of strains and p is the number of snps to be tested (can have missing values)
+#' @param G A s by p matrix of genotypes, where s is the number of strains and p is the number of snps to be tested. This matrix can have missing values, and each SNP should be coded as 0, 1, 0.5 or NA
 #' @param y A N length vector of phenotypes for each individual organism, where N is the total number of individuals
 #' @param strains A s by N incidence matrix that maps every individual to a strain
 #' @param X A s by q matrix of covariates (optional)
@@ -54,6 +54,12 @@ wisam <- function(G, y, strains, X, K, weights = "none", user_weights = NULL){
   }
   if(nrow(G) != nrow(strains)){
     stop("Input dimensions don't match.")
+  }
+  # check that G is coded correctly
+  G_unique <- as.vector(as.matrix(G)) %>% unique()
+  if(!setequal(G_unique, c(0,1,NA,0.5)) & !setequal(G_unique, c(0,1,NA)) &
+     !setequal(G_unique, c(0,1,0.5)) & !setequal(G_unique, c(0,1))){
+    stop("Each SNP should be coded as 0, 1, 0.5, or NA")
   }
 
   strains = apply(strains, 2, function(x) x*c(1:nrow(strains))) %>% colSums() %>% unname()

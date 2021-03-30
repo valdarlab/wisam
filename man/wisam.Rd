@@ -7,7 +7,7 @@
 wisam(G, y, strains, X, K, weights = "none", user_weights = NULL)
 }
 \arguments{
-\item{G}{A s by p matrix of genotypes, where s is the number of strains and p is the number of snps to be tested (can have missing values)}
+\item{G}{A s by p matrix of genotypes, where s is the number of strains and p is the number of snps to be tested. This matrix can have missing values, and each SNP should be coded as 0, 1, 0.5 or NA}
 
 \item{y}{A N length vector of phenotypes for each individual organism, where N is the total number of individuals}
 
