@@ -11,6 +11,8 @@ devtools::install_github('williamvaldar/wisam')
 ```
 
 ## Usage
+The following code chunk generates a toy example dataset to show how the function is used.
+
 ```
 library(wisam)
 library(tidyverse)
