@@ -23,7 +23,6 @@
 #' @import tidyverse
 #' @import stringr
 #' @importFrom limma squeezeVar
-#' @importFrom emma emma.kinship
 #'
 #' @export
 wisam <- function(G, y, strains, X, K, weights = "none", user_weights = NULL){
@@ -41,7 +40,7 @@ wisam <- function(G, y, strains, X, K, weights = "none", user_weights = NULL){
   # initialize X to an intercept if missing
   if (missing(X)) { X <- matrix(data = 1, nrow = s) }
   # initialize K using the G matrix and emma package if missing
-  if (missing(K)) { K <- emma::emma.kinship(t(G), "additive", "all") }
+  if (missing(K)) { K <- emma.kinship(t(G), "additive", "all") }
 
   #### CONDITIONS THAT CAUSE AN ERROR ####
   if (!all(sapply(list(nrow(X), nrow(G), nrow(K)),
