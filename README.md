@@ -6,6 +6,11 @@ When conducting Genome Wide Association Studies with inbred organisms, each stra
 ## Installation 
 
 ```
+if(!requireNamespace("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+
+BiocManager::install("limma")
+
 install.packages("devtools")
 devtools::install_github('valdarlab/wisam')
 ```
