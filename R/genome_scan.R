@@ -22,6 +22,8 @@
 #'
 #' @import tidyverse
 #' @import stringr
+#' @import statmod
+#' @import plyr
 #' @importFrom limma squeezeVar
 #'
 #' @export
