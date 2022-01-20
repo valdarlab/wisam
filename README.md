@@ -5,6 +5,7 @@ When conducting Genome Wide Association Studies with inbred organisms, each stra
 
 ## Installation 
 
+Use the following code chunk to install `wisam`.
 ```
 if(!requireNamespace("BiocManager", quietly = TRUE))
   install.packages("BiocManager")
