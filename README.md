@@ -7,7 +7,7 @@ When conducting Genome Wide Association Studies with inbred organisms, each stra
 
 ```
 install.packages("devtools")
-devtools::install_github('williamvaldar/wisam')
+devtools::install_github('valdarlab/wisam')
 ```
 
 ## Usage
