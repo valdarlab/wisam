@@ -7,7 +7,7 @@
 #' @param strains A s by N incidence matrix that maps every individual to a strain
 #' @param X A s by q matrix of covariates (optional)
 #' @param K A s by s genomic relationship matrix. Will be calculated if unspecified.
-#' @param weights A string specifying the weights to be used. The following are permitted: "none", "samplevars", "limma", "counts", and "user"
+#' @param weights A string specifying the weights to be used. The following are permitted: "none", "samplevars","EB", "limma", "counts", and "user"
 #' @param user_weights A s length vector of weights for each strain, used if weights = "user"
 #'
 #' @return A list containing:
@@ -28,7 +28,6 @@
 #'
 #' @export
 wisam <- function(G, y, strains, X, K, weights = "none", user_weights = NULL){
-
   # number of strains
   s <- nrow(strains)
 
@@ -36,7 +35,7 @@ wisam <- function(G, y, strains, X, K, weights = "none", user_weights = NULL){
   if (missing(y)) { stop('Must provide y (vector of phenotypes) to run a genome Scan.') }
   if (missing(G)) { stop('Must provide at least one snp to run a genome scan.')}
   if (is.null(user_weights) & weights == "user") { stop('Must provide user_weights (vector of weights) if weights = "user".')}
-  if(!(weights %in% c("none", "samplevars", "limma", "counts", "user"))){stop('Weights must be one of "none", "samplevars", "limma", "counts", and "user"')}
+  if(!(weights %in% c("none", "samplevars", "EB", "limma", "counts", "user"))){stop('Weights must be one of "none", "samplevars","EB", "limma", "counts", and "user"')}
 
   #### ACCEPTABLE MISSINGNESS ####
   # initialize X to an intercept if missing
@@ -73,39 +72,71 @@ wisam <- function(G, y, strains, X, K, weights = "none", user_weights = NULL){
   counts = pheno_means$counts
 
   ## check for strains with 0 variance and take them out
-  if(weights %in% c("samplevars")){
-    ind <- which(noise == 0| counts == 1)
-    if (length(ind) > 0){
-      y <- y[-ind]
-      noise <- noise[-ind]
-      counts <- counts[-ind]
-      K <- K[-ind,-ind]
-      G <- G[-ind,]
-      X <- X[-ind,]
-      print(ind)
+    if(weights %in% c("samplevars")){
+      ind <- which(noise == 0| counts == 1)
+      if (length(ind) > 0){
+        y <- y[-ind]
+        noise <- noise[-ind]
+        counts <- counts[-ind]
+        K <- K[-ind,-ind]
+        G <- G[-ind,]
+        X <- X[-ind,]
+        print(ind)
+      }
     }
-  }
 
   ######### WEIGHTS
   sample_vars = noise
+  switch(EXPR = weights,
+         samplevars = {
+           print("caluclating samplevars")
+           weights = counts/sample_vars
+           weights = weights/sum(weights)*sum(counts)
+           },
+         eb = {
+           print("calculating shrinkage estimates with integrated conditional likelihood ebayes")
+           shrink_estimates <- estimateVar(pheno_long, strains)
+           weights = counts/vars_shrink_limmar
+           weights = weights/sum(weights)*sum(counts)
+         },
+         limma = {
+           print("calculating shrinkage estimates with limma")
+           vars_shrink_limmar = squeezeVar(sample_vars, counts-1, robust = TRUE)$var.post
+           weights = counts/vars_shrink_limmar
+           weights = weights/sum(weights)*sum(counts)
+         },
+         none = {
+           print("no weights used")
+           weights <- rep(1, dim(K)[1])
+         },
+         counts = {
+           print("using counts as weights")
+           weights <- counts
+           weights = weights/sum(weights)*sum(counts)
+         },
+         user = {
+           weights <- user_weights
+         },
+         stop("unkown weights input")
+         )
+
+
+
+
+
   if (weights == "samplevars"){
     print("samplevars")
     weights = counts/sample_vars
     weights = weights/sum(weights)*sum(counts)
+  } else if (weights == "eb"){
   } else if (weights == "limma"){
-    print("limma")
-    vars_shrink_limmar = squeezeVar(sample_vars, counts-1, robust = TRUE)$var.post
-    weights = counts/vars_shrink_limmar
-    weights = weights/sum(weights)*sum(counts)
+
   } else if(weights == "none"){
-    print("no weights")
-    weights <- rep(1, dim(K)[1])
+
   } else if(weights == "counts"){
-    print("counts")
-    weights <- counts
-    weights = weights/sum(weights)*sum(counts)
+
   } else if(weights == "user"){
-    weights <- user_weights
+
   }
 
   ######## Find unique SNPs
