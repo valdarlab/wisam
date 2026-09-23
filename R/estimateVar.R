@@ -27,11 +27,15 @@
 #' @importFrom limma squeezeVar
 #'
 #' @export
-combined_likelihood <- function(fulldata,N,ns){
+combined_likelihood <- function(pheno_long,N,ns){
   combined_ss_list <- rep(NA,N)
+  pheno_means = pheno_long %>% dplyr::group_by(strains) %>% dplyr::summarise(mean = mean(y),
+                                                                             noise = var(y),
+                                                                             counts = dplyr::n())
   for(i in 1:N){
-    mean_y <- mean(fulldata[i,],na.rm = TRUE)
-    temp <- unlist(lapply(fulldata[i,], FUN = function(x){(x - mean_y)^2}))
+    strain <- unique(pheno_long$strains)[i]
+    mean_y <- pheno_means$mean[i]
+    temp <- (pheno_long[pheno_long$strains == strain,1]- mean_y)^2
     combined_ss_list[i] <- sum(temp,na.rm = TRUE)
   }
   return(sum(combined_ss_list)/ sum(ns-1))
@@ -39,13 +43,17 @@ combined_likelihood <- function(fulldata,N,ns){
 #'
 #' @export
 # front facing function to shrink variances
-estimateVar <- function(fulldata, strains){
-  y <- unlist(apply(fulldata[,-ncol(fulldata)],MARGIN = 2,FUN = mean))
-  sigma2_observed <- unlist(apply(fulldata[,-ncol(fulldata)],MARGIN = 2,FUN = var))
-  ns <- unlist(apply(fulldata[,-ncol(fulldata)],MARGIN = 2,FUN = function(x){return(length(na.omit(x)))}))
-  N <- length(pheno_means$mean)
+zshrink <- function(pheno_long, plot_densities = FALSE, plot_file = NA){
+  pheno_summary <- pheno_long %>% dplyr::group_by(strains) %>% dplyr::summarise(mean = mean(y),
+                                                                             noise = var(y),
+                                                                             counts = dplyr::n())
+
+  y <- pheno_summary$mean
+  sigma2_observed <- pheno_summary$noise
+  ns <- pheno_summary$counts
+  N <- length(ns)
   # estimating hyperparameters
-  sigma2_bar <- combined_likelihood(fulldata[,-ncol(fulldata)],N,ns)
+  sigma2_bar <- combined_likelihood(pheno_long,N,ns)
   #excluding NA (cases with one observation) from the estimates for lambda and sigmabar
   lambda <- var(sigma2_observed,na.rm = TRUE)
   a <- (sigma2_bar^2)/lambda + 2
@@ -54,11 +62,28 @@ estimateVar <- function(fulldata, strains){
   # Posterior Mean Estimate
   sigma2_estimate <- rep(NA,N)
   for(i in 1:N){
-    numerator <- b + (ns[i]-1)* sigma2_observed[i] / 2
-    denominator <- a + (ns[i]-1)/2 - 1
+    #catch cases with only 1 observation. otherwise ns = 1 and sigma2_observe = NA
+    if(ns[i] == 1){
+      numerator <- b
+      denominator <- a - 1
+    }else{
+      numerator <- b + (ns[i]-1)* sigma2_observed[i] / 2
+      denominator <- a + (ns[i]-1)/2 - 1
+    }
     sigma2_estimate[i] <- numerator / denominator
   }
-  # if there are NA, we can assume these are 0. When sigma2_hat is zero, the estimate is sigma_bar
-  sigma2_estimate[is.na(sigma2_estimate)] <- sigma2_bar
+
+  # if(plot_densities){
+  #   jpeg(filename = plot_file)
+  #   den_observed <- density(sigma2_observed)
+  #   den_estimate <- density(sigma2_estimate)
+  #   xmin <- (min(min(den_estimate$x), min(den_observed)))
+  #
+  #   plot(density(den_observed),col = "black",xlim = c(),main = "Variance Shrinkage of Simulated Normal Data")
+  #   lines(density(sigma2_observed))
+  #   legend(x = 0.8, , legend = c("Observed", "Estimated"),
+  #          fill = c("black", "red"),cex = .8)
+  #
+  # }
   return(data.frame("VarObserved" = sigma2_observed,"VarEstimated" = sigma2_estimate, "NIndividuals" = ns))
 }

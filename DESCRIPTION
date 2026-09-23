@@ -2,14 +2,29 @@ Package: wisam
 Title: Weighted Inbred Strain Association Mapping (wisam)
 Version: 0.0.0.9000
 Authors@R: 
-    person(given = "First",
-           family = "Last",
+    person(given = "Teresa",
+           family = "McGee",
            role = c("aut", "cre"),
-           email = "first.last@example.com",
+           email = "tmcgee@unc.edu",
            comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
+    person(given = "William",
+           family = "Valdar",
+           role = c("aut", "cre"),
+           email = "william.valdar@unc.edu",
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+    person(given = "Jialiu",
+           family = "Xie",
+           role = c("aut", "cre"),
+           email = "jialiux2@live.unc.edu",
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+    person(given = "Marissa",
+           family = "Ashner",
+           role = c("aut", "cre"),
+           email = "marissa.ashner@duke.edu",
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+Description: wISAM is a fast weighted 
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.2
+RoxygenNote: 7.3.2
 Imports: limma, tidyverse, stringr, statmod, plyr

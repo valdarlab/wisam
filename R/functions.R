@@ -59,11 +59,10 @@ scan.strain.means <- function(G, y, X, K, weights){
   # intercept covariate
   Xint = X
   # L <- t(t(sqrt(w) * K) * sqrt(w)) --- this is robert's way of finding L, faster?
-  L = Dhalf %*% K %*% Dhalf
+  L = Dhalf %*% K %*% Dhalf ### TM: shouldn't this be 1/Dhalf, (D^-1/2)KD^-1/2
   eL = eigen(L)
-  laml = eL$values
-  Ul = eL$vectors
-  # I = diag(1, p)
+  laml = eL$values # eigenvalue
+  Ul = eL$vectors # orthogonal
 
   ### RUNNING THE SCAN
 
@@ -162,6 +161,175 @@ scan.strain.means <- function(G, y, X, K, weights){
   list(ps = p_value_het, theta1 = thetaMLEs, theta0 = theta0s,
        h20 = h20s, s20 = s20s, beta = betas)
 }
+
+likeli.brent.het.estimates.weight.cookd <- function(h2, X, y, K, Dhalf, p, laml, Ul, I){
+  Mhet = diag(1/sqrt(h2*laml + (1-h2)*diag(I))) %*% t(Ul) %*% Dhalf
+  Mx = Mhet %*% X
+  My = Mhet %*% y
+  fit = stats::lm.fit(Mx, c(My))
+  B = fit$coefficients
+  s2 = sum(fit$residuals^2)/p
+  return(list(B = B, s2 = s2, fitted_values = fit$fitted.values,cooksd = cooks.d(Mx,My,fit,p), res = fit$residuals))
+}
+
+cooks.d <- function(Mx,My,fit,p){
+  H = lm.influence(fit)$hat
+  residuals <- fit$residuals
+  p <- length(fit$coefficients)  # Number of predictors
+  s2 = sum(fit$residuals^2)/p
+  cooksD <- (residuals^2 / (p * s2)) * (H / (1 - H)^2)
+
+
+
+  #
+  # leverage <- diag(H)
+  # s2 = sum(fit$residuals^2)/p
+  # cooksD <- vector(length = length(leverage))
+  # for(i in 1:length(leverage)){
+  #   cooksD[i] <- (fit$residuals[i]^2)/(fit$rank * s2) * (leverage[i] / (1-leverage[i])^2)
+  # }
+  return(cooksD)
+}
+
+# this function runs a genome scan
+# G is genotype matrix
+# y is phenotype vector
+# X is covariates (or simply, the intercept)
+# K is genetic relationship matrix
+# weight is a vector of the weights
+scan.strain.means.weight.cookd <- function(G, y, X, K, weights){
+  # p = number of strains
+  p = dim(K)[1]
+  I = diag(1,p)
+
+  Dhalf = diag(sqrt(weights))
+
+  p_value_het = vector("numeric", length(G)) # p values
+  thetaMLEs = vector("numeric", length(G)) # likelihood under alt
+  theta0s = vector("numeric", length(G)) # likelihood under null
+  s20s = vector("numeric", length(G)) # s2 estimate under null
+  h20s = vector("numeric", length(G)) # h2 estimate under null
+  betas = vector("numeric", length(G)) # beta estimate under null
+
+  # intercept covariate
+  Xint = X
+  # L <- t(t(sqrt(w) * K) * sqrt(w)) --- this is robert's way of finding L, faster?
+  L = Dhalf %*% K %*% Dhalf
+  eL = eigen(L)
+  laml = eL$values # eigenvalue
+  Ul = eL$vectors # orthogonal
+  # I = diag(1, p)
+
+  ### RUNNING THE SCAN
+
+  # null scan
+  opt0 = optimize(likeli.brent.het, c(0,1), Xint, y, K, Dhalf, p, laml, Ul, I, maximum = TRUE)
+  theta0 = opt0$objective
+  h20 = opt0$maximum
+
+  #### Extract the parameters
+  params = likeli.brent.het.estimates.weight.cookd(h2 = h20, X = Xint, y = y, K = K, Dhalf = Dhalf, p = p, laml = laml, Ul = Ul, I = I)
+  s20 = params$s2 %>% unname() %>% as.numeric()
+  #tau2 = s2*h2_max
+  #sig2 = s2-tau2
+
+
+  # run the single scan for all columns of G
+  cooksd = t(as.matrix(x = params$cooksd))
+  rownames(cooksd) <- "h0"
+  residuals.mat <- t(as.matrix(x = params$res))
+  rownames(cooksd) = "h0"
+  for (i in 1:length(G)){
+    SNP = suppressWarnings(
+      strsplit(str_replace_all(G[i], c("NA"="P", "0.5"="5")),
+               split ="")[[1]]%>%as.numeric())
+    SNP[which(SNP==5)] = 0.5
+    # bind intercept with SNP genotypes
+    X = cbind(Xint, SNP)
+    # check for NAs
+    if (any(is.na(X))){
+      # take out the NA
+      X0 = na.omit(X)
+      # find the indices associated with the NA
+      index = na.omit(X) %>% na.action()
+      # remove those indices from K, y, weights
+      K0 <- K[-c(index), -c(index)]
+      y0 <- y[-c(index)]
+      Dhalf0 <- Dhalf[-c(index), -c(index)]
+      # new number of strains
+      p0 = dim(K0)[1]
+      I0 = diag(1, p0)
+      # re-decompose matrices
+      L0 = Dhalf0 %*% K0 %*% Dhalf0
+      #L0 = (Dhalf0 %*% K0 %*% Dhalf0) %*% t(Z0)
+      eL0 = eigen(L0)
+      laml0 = eL0$values
+      Ul0 =  eL0$vectors
+      # new null scan and SNP scan
+      opt00 = optimize(likeli.brent.het, c(0,1), X0[,1], y0, K0, Dhalf0, p0, laml0, Ul0, I0,
+                       maximum = TRUE)
+      theta00 = opt00$objective
+      h200 = opt00$maximum
+
+      #### Extract the parameters
+      params0 = likeli.brent.het.estimates.weight.cookd(h200, X0[,1], y0, K0, Dhalf0, p0, laml0, Ul0, I0)
+      beta000 = params0$B %>% unname() %>% as.numeric()
+      s200 = params0$s2 %>% unname() %>% as.numeric()
+      #tau2 = s2*h2_max
+      #sig2 = s2-tau2
+
+      optMLE = optimize(likeli.brent.het, c(0,1), X0, y0, K0, Dhalf0, p0, laml0, Ul0, I0,
+                        maximum = TRUE)
+      thetaMLE = optMLE$objective
+      h2 = optMLE$maximum
+
+      #### Extract the parameters
+      paramsMLE = likeli.brent.het.estimates.weight.cookd(h2, X0, y0, K0, Dhalf0, p0, laml0, Ul0, I0)
+      beta = paramsMLE$B %>% unname() %>% as.numeric()
+      beta10 = beta[2]
+
+      tLR = 2*(thetaMLE - theta00)
+      thetaMLEs[i] = thetaMLE
+      theta0s[i] = theta00
+      s20s[i] = s200
+      h20s[i] = h200
+      betas[i] = beta10
+      p_value_het[i] = pchisq(tLR, 1, lower.tail = FALSE)
+      cooksd = rbind(cooksd,paramsMLE$cooksd)
+      residuals.mat = rbind(residuals.mat, paramsMLE$res)
+    }
+    else {
+      # SNP scan for no NA
+      optMLE = optimize(likeli.brent.het, c(0,1), X, y, K, Dhalf, p, laml, Ul, I,
+                        maximum = TRUE)
+      thetaMLE = optMLE$objective
+      h2 = optMLE$maximum
+
+      #### Extract the parameters
+      paramsMLE = likeli.brent.het.estimates.weight.cookd(h2, X, y, K, Dhalf, p, laml, Ul, I)
+      beta = paramsMLE$B %>% unname() %>% as.numeric()
+      beta1 = beta[2]
+
+      tLR = 2*(thetaMLE - theta0)
+      thetaMLEs[i] = thetaMLE
+      theta0s[i] = theta0
+      s20s[i] = s20
+      h20s[i] = h20
+      betas[i] = beta1
+      p_value_het[i] = pchisq(tLR, 1, lower.tail = FALSE)
+      cooksd = rbind(cooksd,paramsMLE$cooksd)
+      residuals.mat = rbind(residuals.mat, paramsMLE$res)
+    }
+  }
+  # returns p values
+  res = list(ps = p_value_het, theta1 = thetaMLEs, theta0 = theta0s,
+       h20 = h20s, s20 = s20s, beta = betas)
+  print("returning from scan strain means")
+  return(list(results = res, cooksD = as.data.frame(cooksd), residuals = as.data.frame(residuals.mat), weights = weights))
+}
+
+
+
 
 ### used to find unique snps in genome scan
 mapping = function(x){
